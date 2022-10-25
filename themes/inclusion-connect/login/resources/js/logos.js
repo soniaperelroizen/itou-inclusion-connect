@@ -17,6 +17,9 @@ function setLogo(element) {
         case 'emplois':
             img.src = "https://i.goopics.net/fyzv6q.png";
             break;
+        case 'cnfs':
+            img.src = "https://i.goopics.net/11l9ji.png";
+            break;
         default:
             img.src = "";
     }
