@@ -54,6 +54,7 @@ Le format des urls est le suivant :
 | Token         | https://{hostname}/realms/{realm-name}/protocol/openid-connect/token         |
 | UserInfo      | https://{hostname}/realms/{realm-name}/protocol/openid-connect/userinfo      |
 | Logout        | https://{hostname}/realms/{realm-name}/protocol/openid-connect/logout        |
+| Login-Reset   | https://{hostname}/realms/{realm-name}/login-actions/reset-credentials       |
 
 Contactez l'équipe du projet pour obtenir les variables de production et de recette.
 
@@ -112,6 +113,10 @@ Les paramètres sont les suivants :
 L'Utilisateur pourra se connecter s'il possède un compte, ou créer un compte en suivant le lien "Se créer un compte".
 
 Il est possible d'utiliser l'endpoint _Registration_ (avec les mêmes paramètres) pour que l'utilisateur arrive directement sur cette seconde page.
+Cet endpoint possède deux paramètres de plus pour faciliter la migration de comptes :
+- **firstname**: permet de pré-remplir le prénom de l'utilisateur
+- **lastname**: permet de pré-remplir le nom de famille de l'utilisateur
+Sur cette page, les champs pré-remplis ne sont pas modifiables. Cela permet de s'assurer qu'un utilisateur existant d'une plateforme qui migre son compte à Incluion Connect ne change pas son email (ce qui empêcherait la plateforme de le reconnaitre).
 
 Note : il est possible d'ajouter des paramètres supplémentaires via la redirect_uri, à passer après ? sous la forme clé=valeur. Ils seront renvoyés tels quels lors du retour vers le FS.
 
@@ -155,6 +160,8 @@ Les paramètres sont les suivants :
 
 - URL : `https://{hostname}/realms/{realm-name}/protocol/openid-connect/token`
 - Méthode : POST
+- Header attendu: `Content-Type: application/x-www-form-urlencoded`
+- Body: au format "key1=value1&key2=value2" (adapté au content-type `application/x-www-form-urlencoded` )
 
 Voici le payload à envoyer :
 - **grant_type**' : `authorization_code` (valeur imposée par le protocol).
@@ -255,3 +262,29 @@ qui sera ensuite redirigé vers l'url passée avec le paramètre **post_logout_r
 
 Si le `STATE` et/ou l'`ID_TOKEN` ne sont pas disponibles, il est possible de déconnecter l'utilisateur avec une redirection  vers `https://{hostname}/realms/{realm-name}/protocol/openid-connect/logout?client_id=<CLIENT_ID>&post_logout_redirect_uri=<FS_URL>%2F<POST_LOGOUT_REDIRECT_URI>`.
 Dans ce cas, l'utilisateur devra confirmer sa volonté de se deconnecter d'Inclusion Connect et sera ensuite redirigé vers l'url passée avec le paramètre **post_logout_redirect_uri**.
+
+### 6) Ré-initialisation de mots de passe
+
+On accède généralement à cette page en cliquant sur "Mot de passe oublié" depuis la page de connexion.
+
+Cependant il est possible d'envoyer directement un utilisateur sur cette page, ce qui est utile notamment dans
+le cas où l'on a importé des utilisateurs d'une plateforme dans Inclusion Connect et où ils ne leur reste qu'à
+changer de mot de passe pour activer leur compte.
+
+Voici le fonctionnement dans ce cas.
+
+#### Description
+
+- Contexte : Le FS redirige l'utilisateur vers l'endpoint _Login-Reset_
+- Origine : FS (par exemple lien dans un email)
+- Cible : Inclusion Connect
+- Type d'appel : redirection navigateur
+
+#### Requête
+
+- URL : `https://{hostname}/realms/{realm-name}/login-actions/reset-credentials`
+- Méthode : POST
+
+Voici les arguments que l'on peut ajouter à l'url :
+- **email** : l'adresse email de l'utilisateur. Cela lui permet de ne pas re-saissir son email sur cette page
+et facilite donc l'activation de son compte.
